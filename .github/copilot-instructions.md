@@ -7,10 +7,10 @@ Deliverable from any simple HTTP server.
 ## Tech Stack
 - Vanilla JavaScript (ES6+), no frameworks
 - Chart.js via CDN only: `https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js`
-- Files: `index.html`, `css/styles.css`, `js/app.js`, `data/mock-data.js`
+- Files: `index.html`, `css/styles.css`, `js/app.js`, `data/mock-data.js` (or `data/transactions.json` for JSON-based mock data)
 
 ## Architecture
-- **`data/mock-data.js`**: Global constants (`CUSTOMERS`, `TRANSACTIONS`, `RISK_LEVELS`, etc.). All mock data lives here — do not scatter data across files.
+- **`data/mock-data.js`** (or **`data/transactions.json`**): Global constants (`CUSTOMERS`, `TRANSACTIONS`, `ALERTS`, `RISK_LEVELS`, etc.). All mock data lives here — do not scatter data across files.
 - **`js/app.js`**: All application logic inside a single IIFE. Cache DOM refs at the top, define functions, then init at the bottom.
 - **`css/styles.css`**: Dark-theme CSS — all theme values defined as custom properties in `:root`.
 
