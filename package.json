@@ -1,0 +1,11 @@
+{
+  "name": "riskguard-dashboard",
+  "private": true,
+  "scripts": {
+    "test": "jest"
+  },
+  "jest": {
+    "testMatch": ["**/tests/**/*.test.js"],
+    "testEnvironment": "jsdom"
+  }
+}

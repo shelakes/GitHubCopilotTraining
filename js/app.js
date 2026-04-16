@@ -3,6 +3,11 @@
 (function () {
   'use strict';
 
+  // --- Global Data (populated from transactions.json) ---
+  let TRANSACTIONS = [];
+  let ALERTS = [];
+  let RISK_TRENDS = { labels: [], datasets: { totalAlerts: [], resolvedAlerts: [] } };
+
   // --- Utility Helpers ---
   function escapeHtml(str) {
     const div = document.createElement('div');
@@ -49,6 +54,102 @@
   function getCustomerName(customerId) {
     const c = CUSTOMERS.find(c => c.id === customerId);
     return c ? c.name : customerId;
+  }
+
+  // --- Data Loading & Transformation ---
+  // Fetches data/transactions.json and transforms field names to match app expectations.
+  // Derives ALERTS and RISK_TRENDS from the transaction data.
+
+  function transformTransaction(raw) {
+    const originCountry = raw.originCountry || '';
+    const destCountry = raw.destinationCountry || '';
+    const direction = (originCountry === destCountry) ? 'Incoming' : 'Outgoing';
+    return {
+      id: raw.transactionId,
+      customerId: raw.accountId,
+      customerName: raw.customerName,
+      amount: raw.amount,
+      currency: raw.currency,
+      counterparty: raw.merchantName,
+      counterpartyCountry: raw.destinationCountry,
+      type: raw.merchantCategory,
+      flags: raw.fraudIndicators || [],
+      date: raw.timestamp,
+      riskScore: raw.riskScore,
+      status: raw.status,
+      direction: direction,
+      originCountry: raw.originCountry
+    };
+  }
+
+  function deriveAlerts(transactions) {
+    // Generate alerts from high-risk transactions with fraud indicators
+    let alertId = 1;
+    const alerts = [];
+    const severityTypes = {
+      VELOCITY_ANOMALY: 'Velocity Anomaly Detected',
+      GEO_ANOMALY: 'Geographic Anomaly Detected',
+      UNUSUAL_MERCHANT: 'Unusual Merchant Category',
+      HIGH_VALUE_SPIKE: 'High-Value Transaction Spike'
+    };
+
+    transactions.forEach(t => {
+      if (t.flags.length === 0) return;
+      const severity = t.riskScore >= 86 ? 'Critical'
+        : t.riskScore >= 61 ? 'High'
+        : t.riskScore >= 31 ? 'Medium'
+        : 'Low';
+      const primaryFlag = t.flags[0];
+      const statusVal = t.status === 'BLOCKED' ? 'Investigating'
+        : t.status === 'PENDING_REVIEW' ? 'New'
+        : 'Resolved';
+
+      alerts.push({
+        id: 'ALT-' + String(alertId++).padStart(3, '0'),
+        customerId: t.customerId,
+        customerName: t.customerName,
+        type: severityTypes[primaryFlag] || primaryFlag,
+        severity: severity,
+        status: statusVal,
+        date: t.date,
+        message: t.flags.length + ' fraud indicator(s) on ' + formatCurrency(t.amount, t.currency) + ' to ' + escapeHtml(t.counterparty),
+        riskScore: t.riskScore
+      });
+    });
+
+    return alerts;
+  }
+
+  function deriveRiskTrends(transactions) {
+    // Build a 7-day trend of alerts by day
+    const now = new Date();
+    const labels = [];
+    const totalAlerts = [];
+    const resolvedAlerts = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const dayStr = d.toISOString().slice(0, 10);
+      labels.push(label);
+
+      const dayTxns = transactions.filter(t => t.date.slice(0, 10) === dayStr);
+      const flagged = dayTxns.filter(t => t.flags.length > 0).length;
+      const resolved = dayTxns.filter(t => t.flags.length > 0 && t.status === 'APPROVED').length;
+      totalAlerts.push(flagged);
+      resolvedAlerts.push(resolved);
+    }
+
+    return { labels, datasets: { totalAlerts, resolvedAlerts } };
+  }
+
+  function loadData() {
+    // TRANSACTIONS_RAW is loaded synchronously via <script src="data/mock-data.js">
+    // Its content mirrors data/transactions.json (the canonical schema reference).
+    TRANSACTIONS = TRANSACTIONS_RAW.map(transformTransaction);
+    ALERTS = deriveAlerts(TRANSACTIONS);
+    RISK_TRENDS = deriveRiskTrends(TRANSACTIONS);
   }
 
   // --- DOM Refs ---
@@ -769,6 +870,8 @@
   setupSortableHeaders('alertsTable', alertSort, renderAlertsTable, getCurrentAlertFilters);
 
   // --- Initialize ---
+  // Transform raw transaction data and render all views
+  loadData();
   renderKPIs();
   renderCharts();
   renderRecentAlerts();
