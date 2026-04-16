@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transaction Risk Dashboard — Bank Operations</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <span>RiskGuard</span>
+      </div>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#" class="nav-link active" data-view="dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a></li>
+      <li><a href="#" class="nav-link" data-view="customers">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Customers
+      </a></li>
+      <li><a href="#" class="nav-link" data-view="transactions">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Transactions
+      </a></li>
+      <li><a href="#" class="nav-link" data-view="alerts">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Alerts
+        <span class="badge" id="alertBadge"></span>
+      </a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="avatar">OP</div>
+        <div>
+          <div class="user-name">Operations Team</div>
+          <div class="user-role">Risk Analyst</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <div class="top-bar-left">
+        <button class="menu-toggle" id="menuToggle">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <h1 id="pageTitle">Risk Dashboard</h1>
+      </div>
+      <div class="top-bar-right">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search customers, transactions..." id="globalSearch">
+        </div>
+        <div class="timestamp">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span id="currentTime"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dashboard View -->
+    <section class="view active" id="dashboardView">
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon--total">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Total Customers</span>
+            <span class="kpi-value" id="kpiTotalCustomers">—</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon--high">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">High/Critical Risk</span>
+            <span class="kpi-value" id="kpiHighRisk">—</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon--alerts">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Open Alerts</span>
+            <span class="kpi-value" id="kpiOpenAlerts">—</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon--txn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Flagged Transactions</span>
+            <span class="kpi-value" id="kpiFlaggedTxn">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="charts-grid">
+        <div class="card chart-card">
+          <h3 class="card-title">Risk Distribution</h3>
+          <div class="chart-container">
+            <canvas id="riskDistributionChart"></canvas>
+          </div>
+        </div>
+        <div class="card chart-card">
+          <h3 class="card-title">Alert Trends (6 Months)</h3>
+          <div class="chart-container">
+            <canvas id="alertTrendsChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Second Charts Row -->
+      <div class="charts-grid">
+        <div class="card chart-card">
+          <h3 class="card-title">Transactions by Risk Level</h3>
+          <div class="chart-container">
+            <canvas id="txnRiskChart"></canvas>
+          </div>
+        </div>
+        <div class="card chart-card">
+          <h3 class="card-title">Risk by Country</h3>
+          <div class="chart-container">
+            <canvas id="countryRiskChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Alerts Table -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Recent Alerts</h3>
+          <a href="#" class="view-all-link" data-navigate="alerts">View All →</a>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table" id="recentAlertsTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Severity</th>
+                <th>Type</th>
+                <th>Customer</th>
+                <th>Message</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Customers View -->
+    <section class="view" id="customersView">
+      <div class="view-controls">
+        <div class="filter-group">
+          <label>Risk Level:</label>
+          <select id="customerRiskFilter">
+            <option value="all">All</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Customer Type:</label>
+          <select id="customerTypeFilter">
+            <option value="all">All</option>
+            <option value="Corporate">Corporate</option>
+            <option value="Individual">Individual</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>KYC Status:</label>
+          <select id="customerKycFilter">
+            <option value="all">All</option>
+            <option value="Verified">Verified</option>
+            <option value="Under Review">Under Review</option>
+            <option value="Expired">Expired</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-wrapper">
+          <table class="data-table sortable" id="customersTable">
+            <thead>
+              <tr>
+                <th data-sort="id">ID</th>
+                <th data-sort="name">Name</th>
+                <th data-sort="type">Type</th>
+                <th data-sort="country">Country</th>
+                <th data-sort="riskScore">Risk Score</th>
+                <th data-sort="kycStatus">KYC Status</th>
+                <th>Flags</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Transactions View -->
+    <section class="view" id="transactionsView">
+      <div class="view-controls">
+        <div class="filter-group">
+          <label>Risk Level:</label>
+          <select id="txnRiskFilter">
+            <option value="all">All</option>
+            <option value="critical">Critical (85+)</option>
+            <option value="high">High (61-85)</option>
+            <option value="medium">Medium (31-60)</option>
+            <option value="low">Low (0-30)</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Direction:</label>
+          <select id="txnDirectionFilter">
+            <option value="all">All</option>
+            <option value="Incoming">Incoming</option>
+            <option value="Outgoing">Outgoing</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Flags Only:</label>
+          <input type="checkbox" id="txnFlaggedFilter">
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-wrapper">
+          <table class="data-table sortable" id="transactionsTable">
+            <thead>
+              <tr>
+                <th data-sort="id">ID</th>
+                <th data-sort="date">Date</th>
+                <th data-sort="customerId">Customer</th>
+                <th data-sort="amount">Amount</th>
+                <th data-sort="type">Type</th>
+                <th data-sort="direction">Direction</th>
+                <th>Counterparty</th>
+                <th data-sort="riskScore">Risk</th>
+                <th>Flags</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Alerts View -->
+    <section class="view" id="alertsView">
+      <div class="view-controls">
+        <div class="filter-group">
+          <label>Severity:</label>
+          <select id="alertSeverityFilter">
+            <option value="all">All</option>
+            <option value="Critical">Critical</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Status:</label>
+          <select id="alertStatusFilter">
+            <option value="all">All</option>
+            <option value="Open">Open</option>
+            <option value="Under Review">Under Review</option>
+            <option value="Resolved">Resolved</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-wrapper">
+          <table class="data-table sortable" id="alertsTable">
+            <thead>
+              <tr>
+                <th data-sort="id">ID</th>
+                <th data-sort="severity">Severity</th>
+                <th data-sort="type">Type</th>
+                <th data-sort="customerId">Customer</th>
+                <th>Message</th>
+                <th data-sort="date">Date</th>
+                <th data-sort="status">Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Customer Detail Modal -->
+    <div class="modal-overlay" id="customerModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 id="modalCustomerName"></h2>
+          <button class="modal-close" id="modalClose">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="detail-grid" id="modalCustomerDetails"></div>
+          <h3 class="section-title">Risk Score Breakdown</h3>
+          <div class="risk-gauge-container">
+            <canvas id="modalRiskGauge" width="200" height="120"></canvas>
+          </div>
+          <h3 class="section-title">Recent Transactions</h3>
+          <div class="table-wrapper">
+            <table class="data-table" id="modalTransactionsTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Date</th>
+                  <th>Amount</th>
+                  <th>Type</th>
+                  <th>Counterparty</th>
+                  <th>Risk</th>
+                  <th>Flags</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <h3 class="section-title">Active Alerts</h3>
+          <div id="modalAlerts"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn--secondary" id="modalEscalate">Escalate</button>
+          <button class="btn btn--primary" id="modalApprove">Mark Reviewed</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="data/mock-data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
